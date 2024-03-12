@@ -37,14 +37,14 @@ python circle_dataloader.py --data=circle1
 ## Training the GNN model
 First do ```cd src```, then run:
 ```shell
-python train --dataset=circle1
+python train --dataset=circle1_degree_centrality_GT
 ```
-> The other available circle dataset is ```circle2```, but you can also find those used in the original paper starting with ```syn```.
+> The other available circle datasets are ```circle1_degree_centrality_GT```, ```circle1_clustering_coeff_GT``` and ```circle1_eigenvector_centrality_GT``` (change ```circle1```to ```circle2```for the other circle data), but you can also find those used in the original paper starting with ```syn```.
 
 ## Training the CF-GNNExplainer model
 Run the following example command line:
 ```shell
-python train --dataset=circle1 --lr=0.01 --beta=0.5 --n_momentum=0.9 --optimizer=SGD
+python train --dataset=circle1_degree_centrality_GT --lr=0.01 --beta=0.5 --n_momentum=0.9 --optimizer=SGD
 ```
 > This will create another folder in the main directory called 'results', where the results files will be stored.
 
