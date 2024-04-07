@@ -41,7 +41,7 @@ torch.autograd.set_detect_anomaly(True)
 
 
 # Import dataset from GNN explainer paper
-with open("../data/gnn_explainer/{}.pickle".format(args.dataset[:4]), "rb") as f:
+with open("../data/gnn_explainer/{}.pickle".format(args.dataset), "rb") as f:
 	data = pickle.load(f)
 
 adj = torch.Tensor(data["adj"]).squeeze()       # Does not include self loops
@@ -76,6 +76,9 @@ test_cf_examples = []
 start = time.time()
 for i in idx_test[:]:
 	sub_adj, sub_feat, sub_labels, node_dict = get_neighbourhood(int(i), edge_index, args.n_layers + 1, features, labels)
+	if int(i) not in node_dict:
+		print(f"Node {i} not found in the subgraph. Skipping...")
+		continue 
 	new_idx = node_dict[int(i)]
 
 	# Check that original model gives same prediction on full graph and subgraph

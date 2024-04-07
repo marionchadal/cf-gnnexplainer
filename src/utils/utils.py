@@ -45,17 +45,39 @@ def normalize_adj(adj):
 	norm_adj = torch.mm(torch.mm(D_tilde_exp, A_tilde), D_tilde_exp)
 	return norm_adj
 
-def get_neighbourhood(node_idx, edge_index, n_hops, features, labels):
-	edge_subset = k_hop_subgraph(node_idx, n_hops, edge_index[0])     # Get all nodes involved
-	edge_subset_relabel = subgraph(edge_subset[0], edge_index[0], relabel_nodes=True)       # Get relabelled subset of edges
-	sub_adj = to_dense_adj(edge_subset_relabel[0]).squeeze()
-	sub_feat = features[edge_subset[0], :]
-	sub_labels = labels[edge_subset[0]]
-	new_index = np.array([i for i in range(len(edge_subset[0]))])
-	node_dict = dict(zip(edge_subset[0].numpy(), new_index))        # Maps orig labels to new
-	# print("Num nodes in subgraph: {}".format(len(edge_subset[0])))
-	return sub_adj, sub_feat, sub_labels, node_dict
+# def get_neighbourhood(node_idx, edge_index, n_hops, features, labels):
+# 	edge_subset = k_hop_subgraph(node_idx, n_hops, edge_index[0])     # Get all nodes involved
+# 	edge_subset_relabel = subgraph(edge_subset[0], edge_index[0], relabel_nodes=True)       # Get relabelled subset of edges
+# 	sub_adj = to_dense_adj(edge_subset_relabel[0]).squeeze()
+# 	sub_feat = features[edge_subset[0], :]
+# 	sub_labels = labels[edge_subset[0]]
+# 	new_index = np.array([i for i in range(len(edge_subset[0]))])
+# 	node_dict = dict(zip(edge_subset[0].numpy(), new_index))        # Maps orig labels to new
+# 	# print("Num nodes in subgraph: {}".format(len(edge_subset[0])))
+# 	return sub_adj, sub_feat, sub_labels, node_dict
 
+def get_neighbourhood(node_idx, edge_index, n_hops, features, labels):
+    # Extract the edge connection tensor from the tuple
+    edge_connections = edge_index[0]
+    
+    # Proceed with using edge_connections for operations expecting an edge index tensor
+    node_subset, edge_index_subset, _, _ = k_hop_subgraph(node_idx, n_hops, edge_connections, relabel_nodes=True)
+    
+    if edge_index_subset.size(1) == 0:  # Check for an empty subgraph
+        # Handle the case of an empty subgraph with placeholder values
+        sub_adj = torch.zeros((features.shape[0], features.shape[0]), dtype=torch.float)
+        sub_feat = features.new_empty((0, features.size(1)))
+        sub_labels = labels.new_empty((0,), dtype=torch.long)
+        node_dict = {}
+    else:
+        # If the subgraph is not empty, continue as usual
+        sub_adj = to_dense_adj(edge_index_subset).squeeze()
+        sub_feat = features[node_subset]
+        sub_labels = labels[node_subset]
+        # Update node_dict to reflect the mapping from original node indices to new, relabeled indices
+        node_dict = {int(node): i for i, node in enumerate(node_subset.tolist())}
+    
+    return sub_adj, sub_feat, sub_labels, node_dict
 
 def create_symm_matrix_from_vec(vector, n_rows):
 	matrix = torch.zeros(n_rows, n_rows)

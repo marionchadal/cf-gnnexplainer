@@ -34,7 +34,7 @@ np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
 # Import dataset from GNN explainer paper
-with open("../data/gnn_explainer/{}.pickle".format(args.dataset[:4]), "rb") as f:
+with open("../data/gnn_explainer/{}.pickle".format(args.dataset), "rb") as f:
 	data = pickle.load(f)
 
 # For models trained using our GCN_synethic from GNNExplainer,
@@ -82,6 +82,31 @@ def train(epoch):
 		  'acc_train: {:.4f}'.format(acc_train),
 		  'time: {:.4f}s'.format(time.time() - t))
 
+def train_circle(epoch):
+    t = time.time()
+    model.train()
+    optimizer.zero_grad()
+    
+    output = model(features, norm_adj)
+    
+    labels_train_long = labels[idx_train].long()
+    
+    loss_train = model.loss(output[idx_train], labels_train_long)
+    y_pred = torch.argmax(output, dim=1)
+    
+    acc_train = accuracy(y_pred[idx_train], labels_train_long)
+    
+    loss_train.backward()
+    
+    clip_grad_norm(model.parameters(), args.clip)
+    
+    optimizer.step()
+
+    print('Epoch: {:04d}'.format(epoch+1),
+          'loss_train: {:.4f}'.format(loss_train.item()),
+          'acc_train: {:.4f}'.format(acc_train),
+          'time: {:.4f}s'.format(time.time() - t))
+
 
 def test():
 	model.eval()
@@ -94,18 +119,41 @@ def test():
 		  "accuracy= {:.4f}".format(acc_test))
 	return y_pred
 
+def test_circle():
+    model.eval()
+    output = model(features, norm_adj)
+    
+    labels_test_long = labels[idx_test].long()
+    
+    loss_test = F.nll_loss(output[idx_test], labels_test_long)
+    y_pred = torch.argmax(output, dim=1)
+    
+    acc_test = accuracy(y_pred[idx_test], labels_test_long)
+    
+    print("Test set results:",
+          "loss= {:.4f}".format(loss_test.item()),
+          "accuracy= {:.4f}".format(acc_test))
+    
+    return y_pred
+
 
 # Train model
 t_total = time.time()
 for epoch in range(args.epochs):
-	train(epoch)
+	if args.dataset.startswith('circle'):
+		train_circle(epoch)
+	else:
+		train(epoch)
 print("Optimization Finished!")
 print("Total time elapsed: {:.4f}s".format(time.time() - t_total))
 
 torch.save(model.state_dict(), "../models/gcn_3layer_{}".format(args.dataset) + ".pt")
 
 # Testing
-y_pred = test()
+if args.dataset.startswith('circle'):
+	y_pred = test_circle()
+else:
+	y_pred = test()
 
 print("y_true counts: {}".format(np.unique(labels.numpy(), return_counts=True)))
 print("y_pred_orig counts: {}".format(np.unique(y_pred.numpy(), return_counts=True)))

@@ -20,8 +20,10 @@ args = parser.parse_args()
 print(args)
 
 
+# header = ["node_idx", "new_idx", "cf_adj", "sub_adj", "y_pred_orig", "y_pred_new", "y_pred_new_actual",
+#             "label", "num_nodes", "loss_total", "loss_pred", "loss_graph_dist"]
 header = ["node_idx", "new_idx", "cf_adj", "sub_adj", "y_pred_orig", "y_pred_new", "y_pred_new_actual",
-            "label", "num_nodes", "loss_total", "loss_pred", "loss_graph_dist"]
+            "label", "num_nodes", "loss_graph_dist"]
 hidden = 20
 dropout = 0.0
 
@@ -31,6 +33,18 @@ elif "syn5" in args.path:
 	dataset = "syn5"
 elif "syn1" in args.path:
 	dataset = "syn1"
+elif "circle1_degree_centrality_GT" in args.path:
+	dataset = "circle1_degree_centrality_GT"
+elif "circle1_clustering_coeff_GT" in args.path:
+	dataset = "circle1_clustering_coeff_GT"
+elif "circle1_eigenvector_centrality_GT" in args.path:
+	dataset = "circle1_eigenvector_centrality_GT"
+elif "circle2_degree_centrality_GT" in args.path:
+	dataset = "circle2_degree_centrality_GT"
+elif "circle2_clustering_coeff_GT" in args.path:
+	dataset = "circle2_clustering_coeff_GT"
+elif "circle2_eigenvector_centrality_GT" in args.path:
+	dataset = "circle2_eigenvector_centrality_GT"
 
 with open("../data/gnn_explainer/{}.pickle".format(dataset), "rb") as f:
 	data = pickle.load(f)
@@ -52,13 +66,18 @@ y_pred_orig = torch.argmax(output, dim=1)
 
 
 # Load CF examples
+# with open(args.path, "rb") as f:
+# 	cf_examples = pickle.load(f)
+# 	df_prep = []
+# 	for example in cf_examples:
+# 		if example != []:
+# 			df_prep.append(example[0])
+# 	df = pd.DataFrame(df_prep, columns=header)
 with open(args.path, "rb") as f:
-	cf_examples = pickle.load(f)
-	df_prep = []
-	for example in cf_examples:
-		if example != []:
-			df_prep.append(example[0])
-	df = pd.DataFrame(df_prep, columns=header)
+    cf_examples = pickle.load(f)
+    df_prep = [example for example in cf_examples if example != []]
+    df = pd.DataFrame(df_prep, columns=header)
+
 
 
 # Add num edges
@@ -67,10 +86,10 @@ for i in df.index:
 	num_edges.append(sum(sum(df["sub_adj"][i])) / 2)
 df["num_edges"] = num_edges
 
-
 # For accuracy, only look at motif nodes
 df_motif = df[df["y_pred_orig"] != 0].reset_index(drop=True)
 accuracy = []
+print(df_motif['new_idx'])
 # Get original predictions
 dict_ypred_orig = dict(zip(sorted(np.concatenate((idx_train.numpy(), idx_test.numpy()))), y_pred_orig.numpy()))
 for i in range(len(df_motif)):
@@ -79,7 +98,7 @@ for i in range(len(df_motif)):
 	_, _, _, node_dict = get_neighbourhood(int(node_idx), edge_index, 4, features, labels)
 
 	# Confirm idx mapping is correct
-	if node_dict[node_idx] == df_motif["new_idx"][i]:
+	if node_dict[node_idx.item()] == df_motif["new_idx"][i]:
 
 		cf_adj = df_motif["cf_adj"][i]
 		sub_adj = df_motif["sub_adj"][i]
@@ -99,6 +118,21 @@ for i in range(len(df_motif)):
 		perturb_nodes_orig_ypred = np.array([dict_ypred_orig[k] for k in perturb_nodes_orig_idx])
 		nodes_in_motif = perturb_nodes_orig_ypred[perturb_nodes_orig_ypred != 0]
 		prop_correct = len(nodes_in_motif) / len(perturb_nodes_orig_idx)
+
+		if len(perturb_nodes_orig_idx) > 0:
+        # Retrieve original predictions
+			perturb_nodes_orig_ypred = np.array([dict_ypred_orig[k] for k in perturb_nodes_orig_idx])
+			nodes_in_motif = perturb_nodes_orig_ypred[perturb_nodes_orig_ypred != 0]
+			prop_correct = len(nodes_in_motif) / len(perturb_nodes_orig_idx)
+		else:
+			print(f"Warning: No perturbed nodes found for node {node_idx}. This will result in NaN for this node.")
+
+		# After appending to accuracy, print debug information if prop_correct is NaN
+		if np.isnan(prop_correct):
+			print(f"NaN detected for node {node_idx}. Details:")
+			print(f"perturb_nodes_orig_idx: {perturb_nodes_orig_idx}")
+			print(f"perturb_nodes_orig_ypred: {perturb_nodes_orig_ypred}")
+			print(f"nodes_in_motif: {nodes_in_motif}")
 
 		accuracy.append([node_idx, new_idx, perturb_nodes_orig_idx,
 		                 perturb_nodes_orig_ypred, nodes_in_motif, prop_correct])
