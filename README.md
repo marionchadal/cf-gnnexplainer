@@ -1,6 +1,6 @@
 # CF-GNNExplainer
 
-This repository uses the codes from the [CF-GNNExplainer: Counterfactual Explanations for Graph Neural Networks](https://arxiv.org/abs/2102.03322) paper. The goal is to run numerical experiments of CF-GNNExplainer on real-world datasets for node classification. There is as yet no such dataset with a ground truth about explainability of nodes.
+This repository uses the codes from the [CF-GNNExplainer: Counterfactual Explanations for Graph Neural Networks](https://arxiv.org/abs/2102.03322) paper. They code is available in their  [Github repository](https://github.com/a-lucic/cf-gnnexplainer/tree/main) The goal is to run numerical experiments of CF-GNNExplainer on real-world datasets for node classification. There is as yet no such dataset with a ground truth about explainability of nodes.
 
 Unlike the [GraphSVX](https://arxiv.org/pdf/2104.10482.pdf) methodology for annotating [MUTAG](https://huggingface.co/datasets/graphs-datasets/MUTAG) graphs, which is based on the knowl-
 edge that carbon rings with NH<sub>2</sub> or NO<sub>2</sub> groups are mutagenic, MUTAG cannot be annotated at the
