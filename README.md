@@ -1,18 +1,12 @@
 # CF-GNNExplainer
 
-This repository uses the codes from the [CF-GNNExplainer: Counterfactual Explanations for Graph Neural Networks](https://arxiv.org/abs/2102.03322) paper. They code is available in their  [Github repository](https://github.com/a-lucic/cf-gnnexplainer/tree/main) The goal is to run numerical experiments of CF-GNNExplainer on real-world datasets for node classification. There is as yet no such dataset with a ground truth about explainability of nodes.
+This repository uses the codes from the [CF-GNNExplainer: Counterfactual Explanations for Graph Neural Networks](https://arxiv.org/abs/2102.03322) paper. Their code is available in their  [Github repository](https://github.com/a-lucic/cf-gnnexplainer/tree/main) The goal is to run numerical experiments of CF-GNNExplainer on real-world datasets for node classification. There is as yet no such dataset with a ground truth about explainability of nodes.
 
-Unlike the [GraphSVX](https://arxiv.org/pdf/2104.10482.pdf) methodology for annotating [MUTAG](https://huggingface.co/datasets/graphs-datasets/MUTAG) graphs, which is based on the knowl-
-edge that carbon rings with NH<sub>2</sub> or NO<sub>2</sub> groups are mutagenic, MUTAG cannot be annotated at the
-level of molecule atoms. Or at least, we are not chemists, and we don’t have the knowledge to do so.
+Unlike the [GraphSVX](https://arxiv.org/pdf/2104.10482.pdf) methodology for annotating [MUTAG](https://huggingface.co/datasets/graphs-datasets/MUTAG) graphs, which is based on the knowledge that carbon rings with NH<sub>2</sub> or NO<sub>2</sub> groups are mutagenic, MUTAG cannot be annotated at the level of molecule atoms. Or at least, we are not chemists, and we don’t have the knowledge to do so.
 
-On the other hand, with other types of data, we are able to obtain ground truth based on our
-intuition, as a graph representing links between individuals, such as connections on a social network.
-If our GNN aims to classify nodes according to their level of connection to others, we could explain
-its predictions by basic but meaningful notions of the level of connectivity between nodes.
+On the other hand, with other types of data, we are able to obtain ground truth based on our intuition, as a graph representing links between individuals, such as connections on a social network. If our GNN aims to classify nodes according to their level of connection to others, we could explain its predictions by basic but meaningful notions of the level of connectivity between nodes.
 
-The following implementation adopts this intuition. Ground truth are generated through three
-different node connectivity measures on a Facebook graph dataset provided by [SNAP](http://snap.stanford.edu) available [here](http://snap.stanford.edu/data/ego-Facebook.html) that represents social circles.
+The following implementation adopts this intuition. Ground truth are generated through three different node connectivity measures on a Facebook graph dataset provided by [SNAP](http://snap.stanford.edu) available [here](http://snap.stanford.edu/data/ego-Facebook.html) that represents social circles.
 
 Using the social circles Facebook dataset, the ground truth for explainability had to be able to express the connectivity of a node to others in a graph (the connectivity of a Facebook user to others, in terms of friends list). Three metrics were chosen:
 
